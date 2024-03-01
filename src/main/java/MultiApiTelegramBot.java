@@ -3,7 +3,8 @@ import modules.HelloModule;
 import modules.HelpModule;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -23,7 +24,7 @@ public class MultiApiTelegramBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
 
-        BotApiMethod<Message> response;
+        PartialBotApiMethod<?> response;
 
         BotModule module = this.modules.parallelStream()
                 .filter(
@@ -38,7 +39,19 @@ public class MultiApiTelegramBot extends TelegramLongPollingBot {
         response = module.handleCommand(update);
 
         try {
-            execute(response);
+            if(response instanceof SendPhoto){
+                execute((SendPhoto) response);
+            }else if(response instanceof SendDocument){
+                execute((SendDocument) response);
+            }else if(response instanceof SendAudio){
+                execute((SendAudio) response);
+            }else if(response instanceof SendSticker){
+                execute((SendSticker) response);
+            }else if(response instanceof SendVideo){
+                execute((SendVideo) response);
+            }else {
+                execute((BotApiMethod<?>) response);
+            }
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
